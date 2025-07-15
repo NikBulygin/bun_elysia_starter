@@ -10,8 +10,7 @@ test('POST /deployments — valid payload without details', async () => {
 
   const result: DeploymentResponse = await deploymentHandler({ body });
 
-  // Note: success might be false due to GitHub API permissions in test environment
-  // but the core functionality should work
+  // Basic structure validation
   expect(result.image).toBe(body.image);
   expect(result.version).toBe(body.version);
   expect(typeof result.timestamp).toBe('string');
@@ -36,7 +35,7 @@ test('POST /deployments — valid payload with details', async () => {
     query: { details: 'true' } 
   });
 
-  // Note: success might be false due to GitHub API permissions in test environment
+  // Basic structure validation
   expect(result.image).toBe(body.image);
   expect(result.version).toBe(body.version);
   expect(typeof result.timestamp).toBe('string');
@@ -48,7 +47,9 @@ test('POST /deployments — valid payload with details', async () => {
       expect(typeof result.details.filesChanged).toBe('number');
       expect(Array.isArray(result.details.filePaths)).toBe(true);
       expect(Array.isArray(result.details.changes)).toBe(true);
+      // Don't check specific values - repository state may vary
       expect(result.details.filesChanged).toBeGreaterThanOrEqual(0);
+      expect(result.details.filePaths.length).toBe(result.details.filesChanged);
     }
   } else {
     expect(result.error).toBeDefined();
@@ -56,7 +57,7 @@ test('POST /deployments — valid payload with details', async () => {
   }
 });
 
-test('POST /deployments — invalid image name', async () => {
+test('POST /deployments — invalid image name (no files to update)', async () => {
   const body: DeploymentRequest = {
     image: 'non-existent-image/name',
     version: 'test-version'
@@ -64,9 +65,36 @@ test('POST /deployments — invalid image name', async () => {
 
   const result: DeploymentResponse = await deploymentHandler({ body });
 
-  // Should still succeed but with no files changed
+  // Should succeed even with no files changed
   expect(result.success).toBe(true);
   expect(result.image).toBe(body.image);
   expect(result.version).toBe(body.version);
   expect(typeof result.timestamp).toBe('string');
+  expect(result.error).toBeUndefined();
+});
+
+test('POST /deployments — same version (no changes needed)', async () => {
+  // Use a version that likely doesn't exist in the repo
+  const body: DeploymentRequest = {
+    image: 'ghcr.io/refty-yapi/refty-node/refty-node',
+    version: 'test-version-12345'
+  };
+
+  const result: DeploymentResponse = await deploymentHandler({ 
+    body, 
+    query: { details: 'true' } 
+  });
+
+  // Should succeed even if no files were updated
+  expect(result.success).toBe(true);
+  expect(result.image).toBe(body.image);
+  expect(result.version).toBe(body.version);
+  expect(typeof result.timestamp).toBe('string');
+  
+  if (result.details) {
+    // May have 0 files changed if version doesn't exist in repo
+    expect(result.details.filesChanged).toBeGreaterThanOrEqual(0);
+    expect(Array.isArray(result.details.filePaths)).toBe(true);
+    expect(Array.isArray(result.details.changes)).toBe(true);
+  }
 }); 

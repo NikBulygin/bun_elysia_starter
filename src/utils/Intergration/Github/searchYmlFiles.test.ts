@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { searchYmlFiles, getYmlFileContent } from './searchYmlFiles';
 
-test('searchYmlFiles should find yml files in repository', async () => {
+test('searchYmlFiles should find yml files in repository branch', async () => {
   const result = await searchYmlFiles();
   
   console.log('Search result:', JSON.stringify(result, null, 2));
@@ -24,6 +24,18 @@ test('getYmlFileContent should fetch file content', async () => {
   expect(result.content).toContain('apiVersion');
   
   console.log('File content length:', result.content?.length);
+});
+
+test('getYmlFileContent should fetch nested yaml file content', async () => {
+  const result = await getYmlFileContent('here/some/long/directory/for/check/ierarchy/test.yml');
+  
+  expect(result.success).toBe(true);
+  expect(typeof result.content).toBe('string');
+  expect(result.content).toContain('apiVersion');
+  expect(result.content).toContain('refty-bayut-district-property-parser');
+  expect(result.content).toContain('ghcr.io/refty-yapi/refty-node/refty-node:05-06-42a252');
+  
+  console.log('Nested file content length:', result.content?.length);
 });
 
  

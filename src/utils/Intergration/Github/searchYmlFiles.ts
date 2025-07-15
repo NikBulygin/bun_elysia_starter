@@ -44,6 +44,11 @@ export async function searchYmlFiles(): Promise<SearchResult> {
   const envConfig = loadEnvConfig();
   const repositoryUrl = envConfig.REPOSITORY_URL || process.env.REPOSITORY_URL;
   const apiKey = envConfig.API_KEY || process.env.API_KEY;
+  // Fix the typo in branch name if it exists
+  let branch = envConfig.BRANCH || process.env.BRANCH || 'main';
+  if (branch === 'GithubIntergration') {
+    branch = 'GithubIntegration';
+  }
 
   // Validate configuration
   if (!repositoryUrl) {
@@ -67,8 +72,8 @@ export async function searchYmlFiles(): Promise<SearchResult> {
     let owner: string, repo: string;
     
     if (repositoryUrl.includes('github.com')) {
-      // Handle GitHub URLs like "https://github.com/owner/repo"
-      const urlParts = repositoryUrl.split('/');
+      // Handle GitHub URLs like "https://github.com/owner/repo" or "https://github.com/owner/repo/"
+      const urlParts = repositoryUrl.replace(/\/$/, '').split('/');
       if (urlParts.length < 2) {
         return {
           success: false,
@@ -93,7 +98,10 @@ export async function searchYmlFiles(): Promise<SearchResult> {
     }
 
     // GitHub API endpoint
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/main?recursive=1`;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
+    
+    console.log(`🔍 Searching for YAML files in: ${owner}/${repo} (branch: ${branch})`);
+    console.log(`📡 API URL: ${apiUrl}`);
 
     // Fetch repository contents
     const response = await fetch(apiUrl, {
@@ -144,6 +152,11 @@ export async function getYmlFileContent(filePath: string): Promise<{ success: bo
   const envConfig = loadEnvConfig();
   const repositoryUrl = envConfig.REPOSITORY_URL || process.env.REPOSITORY_URL;
   const apiKey = envConfig.API_KEY || process.env.API_KEY;
+  // Fix the typo in branch name if it exists
+  let branch = envConfig.BRANCH || process.env.BRANCH || 'main';
+  if (branch === 'GithubIntergration') {
+    branch = 'GithubIntegration';
+  }
 
   if (!repositoryUrl || !apiKey) {
     return {
@@ -156,8 +169,8 @@ export async function getYmlFileContent(filePath: string): Promise<{ success: bo
     let owner: string, repo: string;
     
     if (repositoryUrl.includes('github.com')) {
-      // Handle GitHub URLs like "https://github.com/owner/repo"
-      const urlParts = repositoryUrl.split('/');
+      // Handle GitHub URLs like "https://github.com/owner/repo" or "https://github.com/owner/repo/"
+      const urlParts = repositoryUrl.replace(/\/$/, '').split('/');
       owner = urlParts[urlParts.length - 2];
       repo = urlParts[urlParts.length - 1];
     } else {
@@ -167,7 +180,7 @@ export async function getYmlFileContent(filePath: string): Promise<{ success: bo
       repo = urlParts[urlParts.length - 1];
     }
 
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`;
 
     const response = await fetch(apiUrl, {
       headers: {

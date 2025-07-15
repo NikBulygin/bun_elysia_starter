@@ -33,6 +33,17 @@ export interface SwaggerConfig {
   summary: string;
   description: string;
   query?: any;
+  parameters?: Array<{
+    name: string;
+    in: 'query' | 'path' | 'header' | 'cookie';
+    required?: boolean;
+    schema: {
+      type: string;
+      enum?: string[];
+      default?: string;
+    };
+    description?: string;
+  }>;
   body: any;
   requestBody: {
     content: {

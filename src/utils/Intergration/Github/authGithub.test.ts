@@ -42,4 +42,43 @@ test('GitHub API authorization works with API_KEY', async () => {
   const data = await response.json();
   expect(data).toHaveProperty('login');
   console.log('GitHub login:', data.login);
+});
+
+test('GitHub API: can read repository', async () => {
+  const envConfig = loadEnvConfig();
+  const apiKey = envConfig.API_KEY || process.env.API_KEY;
+  const repo = 'NikBulygin/refty-infra-test';
+
+  const response = await fetch(`https://api.github.com/repos/${repo}`, {
+    headers: {
+      'Authorization': `token ${apiKey}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'refty-infra-test'
+    }
+  });
+
+  expect(response.status).toBe(200);
+  const data = await response.json();
+  expect(data.full_name).toBe(repo);
+});
+
+test('GitHub API: token has push access (can edit repo)', async () => {
+  const envConfig = loadEnvConfig();
+  const apiKey = envConfig.API_KEY || process.env.API_KEY;
+  const repo = 'NikBulygin/refty-infra-test';
+
+  const response = await fetch(`https://api.github.com/repos/${repo}`, {
+    headers: {
+      'Authorization': `token ${apiKey}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'refty-infra-test'
+    }
+  });
+
+  expect(response.status).toBe(200);
+  const data = await response.json();
+  expect(data).toHaveProperty('permissions');
+  expect(data.permissions).toHaveProperty('push');
+  console.log('Repo push permission:', data.permissions.push);
+  expect(data.permissions.push).toBe(true);
 }); 

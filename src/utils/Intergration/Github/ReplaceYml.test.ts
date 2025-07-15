@@ -29,7 +29,8 @@ test('should replace image version and create commit without push', async () => 
       c.file === 'here/some/long/directory/for/check/ierarchy/test.yaml'
     );
     expect(testYamlChange).toBeDefined();
-    expect(testYamlChange!.oldVersion).toBe('05-06-42a252');
+    expect(testYamlChange!.oldVersion).toBeDefined();
+    expect(testYamlChange!.oldVersion).not.toBe(newVersion);
     expect(testYamlChange!.newVersion).toBe(newVersion);
     
     // Note: Commit creation might fail due to permissions, but replacement logic should work

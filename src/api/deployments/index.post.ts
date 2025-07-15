@@ -55,13 +55,16 @@ export default async ({ body, query }: { body: DeploymentRequest; query?: { deta
 export const swaggerConfig: SwaggerConfig = {
   tags: ['Deployments'],
   summary: 'Change image version in YAML files',
-  description: 'Change image version in YAML files in GitHub repository',
-  query: t.Object({
-    details: t.Optional(t.String({ 
-      description: 'Return detailed information about changes (set to "true")',
-      examples: ['true', 'false']
-    }))
-  }),
+  description: 'Change image version in YAML files in GitHub repository. Query param: `details` (set to "true" for detailed info).',
+  parameters: [
+    {
+      name: 'details',
+      in: 'query',
+      required: false,
+      schema: { type: 'string', enum: ['true', 'false'], default: 'false' },
+      description: 'Return detailed information about changes. Set to "true" to get file paths, changes, and commit SHA.'
+    }
+  ],
   body: t.Object({
     image: t.String({ 
       description: 'Docker image name',
@@ -108,24 +111,96 @@ export const swaggerConfig: SwaggerConfig = {
       description: 'Deployment successful',
       content: {
         'application/json': {
-          schema: t.Object({
-            success: t.Boolean(),
-            image: t.String(),
-            version: t.String(),
-            timestamp: t.String(),
-            error: t.Optional(t.String()),
-            details: t.Optional(t.Object({
-              filesChanged: t.Number(),
-              filePaths: t.Array(t.String()),
-              changes: t.Array(t.Object({
-                file: t.String(),
-                oldVersion: t.String(),
-                newVersion: t.String()
-              })),
-              commitSha: t.Optional(t.String()),
-              errors: t.Optional(t.Array(t.String()))
-            }))
-          })
+          schema: {
+            oneOf: [
+              {
+                type: 'object',
+                description: 'Response without details (default)',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  image: { type: 'string', example: 'ghcr.io/refty-yapi/refty-node/refty-node' },
+                  version: { type: 'string', example: '05-06-42a252' },
+                  timestamp: { type: 'string', example: '2025-07-15T06:25:05.577Z' }
+                },
+                required: ['success', 'image', 'version', 'timestamp']
+              },
+              {
+                type: 'object',
+                description: 'Response with details (when details=true)',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  image: { type: 'string', example: 'ghcr.io/refty-yapi/refty-node/refty-node' },
+                  version: { type: 'string', example: '05-06-42a252' },
+                  timestamp: { type: 'string', example: '2025-07-15T06:25:05.577Z' },
+                  details: {
+                    type: 'object',
+                    properties: {
+                      filesChanged: { type: 'number', example: 3 },
+                      filePaths: { 
+                        type: 'array', 
+                        items: { type: 'string' },
+                        example: ['deployment.yaml', 'config.yaml', 'test.yaml']
+                      },
+                      changes: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            file: { type: 'string', example: 'deployment.yaml' },
+                            oldVersion: { type: 'string', example: '05-06-42a251' },
+                            newVersion: { type: 'string', example: '05-06-42a252' }
+                          }
+                        },
+                        example: [
+                          {
+                            file: 'deployment.yaml',
+                            oldVersion: '05-06-42a251',
+                            newVersion: '05-06-42a252'
+                          }
+                        ]
+                      },
+                      commitSha: { type: 'string', example: 'abc123def456' }
+                    }
+                  }
+                },
+                required: ['success', 'image', 'version', 'timestamp', 'details']
+              }
+            ]
+          },
+          examples: {
+            'success-without-details': {
+              summary: 'Successful response without details',
+              description: 'Default response when details parameter is not set or set to false',
+              value: {
+                success: true,
+                image: 'ghcr.io/refty-yapi/refty-node/refty-node',
+                version: '05-06-42a252',
+                timestamp: '2025-07-15T06:25:05.577Z'
+              }
+            },
+            'success-with-details': {
+              summary: 'Successful response with details',
+              description: 'Response when details=true query parameter is set',
+              value: {
+                success: true,
+                image: 'ghcr.io/refty-yapi/refty-node/refty-node',
+                version: '05-06-42a252',
+                timestamp: '2025-07-15T06:25:05.577Z',
+                details: {
+                  filesChanged: 3,
+                  filePaths: ['deployment.yaml', 'config.yaml', 'test.yaml'],
+                  changes: [
+                    {
+                      file: 'deployment.yaml',
+                      oldVersion: '05-06-42a251',
+                      newVersion: '05-06-42a252'
+                    }
+                  ],
+                  commitSha: 'abc123def456'
+                }
+              }
+            }
+          }
         }
       }
     },

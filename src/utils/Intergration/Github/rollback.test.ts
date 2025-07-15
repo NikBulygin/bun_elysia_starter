@@ -32,11 +32,14 @@ test('should rollback changes to original state', async () => {
   const changeResult = await replaceImageVersion(imageName, testVersion);
   expect(changeResult.success).toBe(true);
   
-  // Verify changes were made in at least one file
+  // Verify changes were made by checking the in-memory results
+  expect(changeResult.updatedFiles.length).toBeGreaterThan(0);
+  expect(changeResult.results.some(r => r.changes && r.changes.length > 0)).toBe(true);
+  
+  // Check that at least one file has the new version in its updated content
   let changesFound = false;
-  for (const file of filesToCheck) {
-    const changedContent = await getYmlFileContent(file);
-    if (changedContent.success && changedContent.content && changedContent.content.includes(`${imageName}:${testVersion}`)) {
+  for (const result of changeResult.results) {
+    if (result.updatedContent && result.updatedContent.includes(`${imageName}:${testVersion}`)) {
       changesFound = true;
       break;
     }

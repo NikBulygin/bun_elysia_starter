@@ -27,7 +27,7 @@ test('getYmlFileContent should fetch file content', async () => {
 });
 
 test('getYmlFileContent should fetch nested yaml file content', async () => {
-  const result = await getYmlFileContent('here/some/long/directory/for/check/ierarchy/test.yml');
+  const result = await getYmlFileContent('here/some/long/directory/for/check/ierarchy/test.yaml');
   
   expect(result.success).toBe(true);
   expect(typeof result.content).toBe('string');

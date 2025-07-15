@@ -10,6 +10,18 @@ export interface DeploymentResponse {
   image: string;
   version: string;
   timestamp: string;
+  error?: string;
+  details?: {
+    filesChanged: number;
+    filePaths: string[];
+    changes: Array<{
+      file: string;
+      oldVersion: string;
+      newVersion: string;
+    }>;
+    commitSha?: string;
+    errors?: string[];
+  };
 }
 
 // Handler function type
@@ -20,6 +32,7 @@ export interface SwaggerConfig {
   tags: string[];
   summary: string;
   description: string;
+  query?: any;
   body: any;
   requestBody: {
     content: {

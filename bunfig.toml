@@ -1,0 +1,4 @@
+[install]
+# Configure path aliases
+[install.paths]
+"~/*" = "./src/*" 

@@ -15,15 +15,17 @@ spec:
       nodeSelector:
         purpose: parsers
       tolerations:
-        - key: "dedicated"
-          operator: "Equal"
-          value: "parsers"
-          effect: "NoSchedule"
+        - key: dedicated
+          operator: Equal
+          value: parsers
+          effect: NoSchedule
       serviceAccountName: refty-dev-new
       containers:
         - name: refrefty-bayut-district-property-parser
           image: ghcr.io/refty-yapi/refty-node/refty-node:05-06-42a252
-          command: ["node", "dist/bayutDistrictParserJobsWorker.js"]
+          command:
+            - node
+            - dist/bayutDistrictParserJobsWorker.js
           env:
             - name: POSTGRES_USER
               valueFrom:
@@ -40,7 +42,7 @@ spec:
             - name: POSTGRES_DB
               value: postgres
             - name: POSTGRES_PORT
-              value: "5432"
+              value: '5432'
           volumeMounts:
             - mountPath: /app/config
               name: refty-node-config

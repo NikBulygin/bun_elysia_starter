@@ -42,11 +42,43 @@ curl -X POST "http://localhost:3000/deployments?details=true" \
 
 # View Swagger docs
 curl http://localhost:3000/swagger
+
+# Health check
+curl http://localhost:3000/health
 ```
 
 ### Test
 ```bash
 bun test
+```
+
+### Docker & Kubernetes Deployment
+
+#### Docker
+```bash
+# Build image
+docker build -t refty-infra-test .
+
+# Run container
+docker run -p 3000:3000 --env-file .env refty-infra-test
+
+# Using docker-compose
+docker-compose up -d
+```
+
+#### Kubernetes
+```bash
+# Apply all manifests
+kubectl apply -k k8s/
+
+# Or apply individually
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/secrets.yaml
+
+# Check deployment status
+kubectl get pods -l app=refty-infra-test
+kubectl logs -l app=refty-infra-test
 ```
 
 ---
@@ -62,32 +94,31 @@ This is a **GitHub YAML file updater** that automatically:
 3. **Creates commits** with the changes
 4. **Pushes updates** to the repository
 
-### Key Features
-
-#### 🔍 **Smart YAML Detection**
-- Automatically finds all `.yml` and `.yaml` files in the repository
-- Searches through nested directories
-- Supports complex YAML structures with multiple containers
-
-#### 🐳 **Docker Image Version Replacement**
-- Updates image versions in Kubernetes deployment files
-- Handles both single `container` and multiple `containers` blocks
-- Preserves YAML structure and formatting
-- Supports any Docker image format (ghcr.io, docker.io, etc.)
-
-#### 🔄 **GitHub Integration**
-- Uses GitHub API for file operations
-- Creates commits with descriptive messages
-- Supports automatic push or manual review
-- Includes rollback functionality for testing
-
-#### 📊 **Detailed Reporting**
-- Returns list of changed files
-- Shows old vs new versions for each change
-- Provides commit SHA for tracking
-- Optional detailed response with full change information
-
 ### API Endpoints
+
+#### `GET /health`
+Health check endpoint that monitors application status and uptime.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-07-15T06:25:05.577Z",
+  "uptime": 3600,
+  "version": "1.0.0",
+  "environment": "production",
+  "checks": {
+    "github": "ok",
+    "database": "ok"
+  }
+}
+```
+
+**Use Cases:**
+- Kubernetes liveness/readiness probes
+- Load balancer health checks
+- Monitoring system integration
+- Docker health checks
 
 #### `POST /deployments`
 Updates Docker image versions in YAML files.
@@ -148,16 +179,6 @@ API_KEY=github_pat_...
 - **Contents**: Read and write repository contents (required for commits)
 - **Repository access**: Select specific repository or all repositories
 
-### Architecture
-
-#### Core Modules
-- **`ReplaceYml.ts`**: Main orchestration function
-- **`searchYmlFiles.ts`**: GitHub API integration for file discovery
-- **`replaceString.ts`**: YAML parsing and image replacement logic
-- **`commit.ts`**: GitHub commit creation
-- **`push.ts`**: GitHub push operations
-- **`rollback.ts`**: Test rollback functionality
-
 #### Technology Stack
 - **Runtime**: Bun (fast JavaScript runtime)
 - **Framework**: Elysia (lightweight web framework)
@@ -165,13 +186,8 @@ API_KEY=github_pat_...
 - **Testing**: Bun test runner
 - **YAML Processing**: js-yaml
 - **GitHub Integration**: GitHub REST API
-
-### Use Cases
-
-1. **CI/CD Pipeline Integration**: Automatically update deployment files when new Docker images are built
-2. **Environment Management**: Keep staging/production environments in sync with latest image versions
-3. **Infrastructure as Code**: Maintain Kubernetes manifests with current image versions
-4. **Testing**: Quickly update test environments with new image versions
+- **Containerization**: Docker with multi-stage builds
+- **Orchestration**: Kubernetes manifests with Kustomize
 
 ### Testing
 
@@ -187,40 +203,3 @@ Run tests with:
 ```bash
 bun test
 ```
-
-### Development
-
-#### Project Structure
-```
-src/
-├── api/deployments/          # API endpoints
-├── types/                    # TypeScript type definitions
-├── utils/Integration/Github/ # GitHub integration modules
-└── index.ts                  # Main server entry point
-```
-
-#### Key Commands
-```bash
-bun run dev      # Start development server
-bun test         # Run all tests
-bun run build    # Build for production
-```
-
-### Security Considerations
-
-- GitHub tokens should have minimal required permissions
-- Use fine-grained tokens for production environments
-- Repository access should be limited to specific repositories
-- Consider implementing authentication for the API endpoints
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
-
-### License
-
-[Add your license here] 

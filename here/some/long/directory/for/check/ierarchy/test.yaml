@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: refty-bayut-district-property-parser
+spec:
+  selector:
+    matchLabels:
+      app: refty-bayut-district-property-parser
+  replicas: 7
+  template:
+    metadata:
+      labels:
+        app: refty-bayut-district-property-parser
+    spec:
+      nodeSelector:
+        purpose: parsers
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "parsers"
+          effect: "NoSchedule"
+      serviceAccountName: refty-dev-new
+      containers:
+        - name: refrefty-bayut-district-property-parser
+          image: ghcr.io/refty-yapi/refty-node/refty-node:05-06-42a252
+          command: ["node", "dist/bayutDistrictParserJobsWorker.js"]
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: POSTGRES_HOST
+              value: postgres
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_PORT
+              value: "5432"
+          volumeMounts:
+            - mountPath: /app/config
+              name: refty-node-config
+      volumes:
+        - name: refty-node-config
+          configMap:
+            name: refty-node-config
+      imagePullSecrets:
+        - name: regcred

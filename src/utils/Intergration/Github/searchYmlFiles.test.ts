@@ -33,7 +33,8 @@ test('getYmlFileContent should fetch nested yaml file content', async () => {
   expect(typeof result.content).toBe('string');
   expect(result.content).toContain('apiVersion');
   expect(result.content).toContain('refty-bayut-district-property-parser');
-  expect(result.content).toContain('ghcr.io/refty-yapi/refty-node/refty-node:05-06-42a252');
+  // Don't check for specific version as it may change between tests
+  expect(result.content).toContain('ghcr.io/refty-yapi/refty-node/refty-node:');
   
   console.log('Nested file content length:', result.content?.length);
 });

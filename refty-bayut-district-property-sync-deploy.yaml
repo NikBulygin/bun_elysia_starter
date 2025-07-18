@@ -22,7 +22,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: refty-bayut-district-property-sync
-          image: ghcr.io/refty-yapi/refty-node/refty-node:helper-function-version
+          image: ghcr.io/refty-yapi/refty-node/refty-node:message-helper-version
           command:
             - node
             - dist/bayutDistrictSyncManager.js

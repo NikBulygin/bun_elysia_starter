@@ -1,12 +1,11 @@
 {
-  "name": "refty-infra-test",
+  "name": "template_generator",
   "version": "1.0.0",
   "description": "Dynamic API server with Elysia",
   "main": "src/index.ts",
   "scripts": {
     "prestart": "bun test",
     "start": "bun run src/index.ts",
-    "predev": "bun test",
     "dev": "bun --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
     "health-check": "curl -f http://localhost:3000/health || exit 1",

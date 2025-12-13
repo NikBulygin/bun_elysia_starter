@@ -10,12 +10,23 @@
     "build": "bun build src/index.ts --outdir dist --target bun",
     "health-check": "curl -f http://localhost:3000/health || exit 1",
     "test": "bun test",
-    "test:watch": "bun test --watch"
+    "test:watch": "bun test --watch",
+    "db:generate": "drizzle-kit generate:pg",
+    "db:migrate": "drizzle-kit push",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:init": "bun run src/db/migrate.ts"
   },
   "type": "module",
   "dependencies": {
+    "@elysiajs/swagger": "^0.8.0",
+    "@types/node": "^25.0.1",
+    "drizzle-orm": "^0.29.0",
     "elysia": "^0.8.0",
-    "@elysiajs/swagger": "^0.8.0"
+    "postgres": "^3.4.3"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.20.0"
   },
   "engines": {
     "bun": ">=1.0.0"

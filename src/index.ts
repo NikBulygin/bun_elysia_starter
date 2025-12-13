@@ -2,6 +2,7 @@ import { Elysia } from "elysia";
 import { swagger } from '@elysiajs/swagger';
 import { loadRoutes } from './utils/dynamicRouting/index.js';
 import { initDatabase } from './db/migrate.js';
+import './bot/index.js';
 
 // Create application
 const app = new Elysia()
@@ -10,7 +11,17 @@ const app = new Elysia()
       info: {
         title: 'Dev API Routes',
         version: '1.0.0',
-        description: 'API with dynamic route loading from api/ directory'
+        description: 'API with dynamic route loading from api/ directory. All endpoints (except /health and /) require X-Telegram-Init-Data header for authentication.'
+      },
+      components: {
+        securitySchemes: {
+          telegramInitData: {
+            type: 'apiKey',
+            in: 'header',
+            name: 'X-Telegram-Init-Data',
+            description: 'Telegram Mini App initData for authentication. Must be valid HMAC-SHA256 signed data.'
+          }
+        }
       }
     }
   }))

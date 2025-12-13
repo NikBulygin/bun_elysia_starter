@@ -1,10 +1,10 @@
-import { pgTable, serial, varchar, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, bigint, varchar, pgEnum } from 'drizzle-orm/pg-core';
 
 export const userRoleEnum = pgEnum('user_role', ['admin', 'manager', 'none']);
 
 export const users = pgTable('users', {
-  id: serial('id').primaryKey(),
-  name: varchar('name', { length: 255 }).notNull(),
+  telegramUserId: bigint('telegram_user_id', { mode: 'number' }).primaryKey().notNull(),
+  username: varchar('username', { length: 255 }).notNull().unique(),
   role: userRoleEnum('role').default('none').notNull(),
 });
 

@@ -3,10 +3,15 @@ import { readdir, stat } from 'fs/promises';
 import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { validateInitDataMiddleware } from '../../middleware/validateInitData';
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Routes that don't require initData validation
+const publicRoutes = ['/health', '/'];
+const publicRoutePrefixes = ['/auth', '/bot'];
 
 // Function to dynamically load routes
 export async function loadRoutes(app: Elysia) {
@@ -57,33 +62,60 @@ async function processRouteFile(app: Elysia, filePath: string, routePath: string
     // Dynamically import module
     const module = await import(importPath);
     
-    // Find handler and swagger config in module
+    // Find handler, swagger config, and middleware in module
     const handler = module.default || module.handler || module[method];
     const swaggerConfig = module.swaggerConfig;
+    const middleware = module.middleware || [];
     
     if (handler && typeof handler === 'function') {
+      // Create route instance with middleware
+      let routeInstance = new Elysia();
+      
+      // Check if route is public (doesn't require initData validation)
+      const isPublicRoute = publicRoutes.includes(fullRoutePath) || 
+                           publicRoutePrefixes.some(prefix => fullRoutePath.startsWith(prefix));
+      
+      // Apply initData validation middleware for non-public routes
+      if (!isPublicRoute) {
+        routeInstance = routeInstance.use(validateInitDataMiddleware);
+      }
+      
+      // Apply route-specific middleware in order
+      if (Array.isArray(middleware)) {
+        for (const mw of middleware) {
+          if (mw) {
+            routeInstance = routeInstance.use(mw);
+          }
+        }
+      } else if (middleware) {
+        routeInstance = routeInstance.use(middleware);
+      }
+      
       // Register route with swagger config if available
       const routeConfig = swaggerConfig ? { detail: swaggerConfig } : undefined;
       
       switch (method) {
         case 'get':
-          app.get(fullRoutePath, handler, routeConfig);
+          routeInstance.get(fullRoutePath, handler, routeConfig);
           break;
         case 'post':
-          app.post(fullRoutePath, handler, routeConfig);
+          routeInstance.post(fullRoutePath, handler, routeConfig);
           break;
         case 'put':
-          app.put(fullRoutePath, handler, routeConfig);
+          routeInstance.put(fullRoutePath, handler, routeConfig);
           break;
         case 'delete':
-          app.delete(fullRoutePath, handler, routeConfig);
+          routeInstance.delete(fullRoutePath, handler, routeConfig);
           break;
         case 'patch':
-          app.patch(fullRoutePath, handler, routeConfig);
+          routeInstance.patch(fullRoutePath, handler, routeConfig);
           break;
         default:
           console.log(`Unsupported method: ${method} for ${fullRoutePath}`);
       }
+      
+      // Merge route instance into main app
+      app.use(routeInstance);
       
       console.log(`✅ Registered ${method.toUpperCase()} ${fullRoutePath} -> ${importPath}`);
     } else {

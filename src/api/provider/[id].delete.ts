@@ -1,8 +1,8 @@
 import { t } from 'elysia';
-import { checkRole } from '../../middleware/checkRole';
 import { deleteProvider } from '../../utils/provider/delete';
 
-export const middleware = [checkRole(['admin'])];
+// DELETE requests require authentication but no role checking at this stage
+export const middleware = [];
 
 export const swaggerConfig = {
   tags: ['Provider'],

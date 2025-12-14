@@ -1,10 +1,13 @@
 import { t } from 'elysia';
-import { getAllProviders } from '../../utils/provider/getAll';
+import { getAllProvidersGroupedByType } from '../../utils/provider/getAllWithStatus';
+
+// GET requests don't require role checking - only authentication
+export const middleware = [];
 
 export const swaggerConfig = {
   tags: ['Provider'],
-  summary: 'Get all providers',
-  description: 'Retrieves all providers.',
+  summary: 'Get all providers grouped by type',
+  description: 'Retrieves all providers grouped by type (time and tasks) with their connection status. Credentials are not returned for security reasons.',
   headers: {
     'X-Telegram-Init-Data': {
       description: 'Telegram Mini App initData for authentication',
@@ -14,17 +17,27 @@ export const swaggerConfig = {
   },
   responses: {
     200: {
-      description: 'List of providers',
+      description: 'Providers grouped by type',
       content: {
         'application/json': {
-          schema: t.Array(
-            t.Object({
-              id: t.Number({ example: 1 }),
-              type: t.String({ example: 'time' }),
-              name: t.String({ example: 'Clockify' }),
-              credentials: t.Record(t.String(), t.Any()),
-            })
-          ),
+          schema: t.Object({
+            time: t.Array(
+              t.Object({
+                id: t.Number({ example: 1 }),
+                type: t.String({ example: 'time' }),
+                name: t.String({ example: 'Clockify' }),
+                isWork: t.Boolean({ example: true, description: 'Whether the provider connection is working' }),
+              })
+            ),
+            tasks: t.Array(
+              t.Object({
+                id: t.Number({ example: 2 }),
+                type: t.String({ example: 'tasks' }),
+                name: t.String({ example: 'Jira' }),
+                isWork: t.Boolean({ example: true, description: 'Whether the provider connection is working' }),
+              })
+            ),
+          }),
         },
       },
     },
@@ -32,7 +45,7 @@ export const swaggerConfig = {
 };
 
 export default async function handler() {
-  const providers = await getAllProviders();
+  const providers = await getAllProvidersGroupedByType();
   return providers;
 }
 

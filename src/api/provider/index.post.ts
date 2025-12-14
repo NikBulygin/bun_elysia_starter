@@ -1,8 +1,8 @@
 import { t } from 'elysia';
-import { checkRole } from '../../middleware/checkRole';
 import { createProvider } from '../../utils/provider/create';
 
-export const middleware = [checkRole(['admin'])];
+// POST requests require authentication but no role checking at this stage
+export const middleware = [];
 
 export const swaggerConfig = {
   tags: ['Provider'],

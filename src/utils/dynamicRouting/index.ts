@@ -85,31 +85,67 @@ async function processRouteFile(app: Elysia, filePath: string, routePath: string
       
       // Apply route-specific middleware in order, checking path patterns
       if (Array.isArray(middleware)) {
+        console.log(`   🔍 Found ${middleware.length} middleware(s) in route file`);
         for (const mw of middleware) {
           if (mw) {
             const middlewareConfig = getMiddlewareConfig(mw);
+            
+            // Try to get middleware name from stored property first
+            let mwInfo = (mw as any).middlewareName || (mw as any).name || 'unknown';
+            
+            // If it's checkRole, try to get allowedRoles from stored property
+            const storedRoles = (mw as any).allowedRoles;
+            if (storedRoles && Array.isArray(storedRoles) && storedRoles.length > 0) {
+              mwInfo = `checkRole([${storedRoles.join(', ')}])`;
+              console.log(`   🔍 Processing middleware: ${mwInfo} (stored roles: [${storedRoles.join(', ')}])`);
+            } else {
+              // Check if it's a checkRole middleware but roles are missing
+              if (mwInfo === 'unknown' && String(mw).includes('allowedRoles')) {
+                console.log(`   ⚠️  [dynamicRouting] WARNING: checkRole middleware detected but allowedRoles not found in instance`);
+                console.log(`      Middleware type: ${typeof mw}, has middlewareName: ${!!(mw as any).middlewareName}, has allowedRoles: ${!!storedRoles}`);
+              }
+              console.log(`   🔍 Processing middleware: ${mwInfo}`);
+            }
             
             // If no config found, apply middleware (backward compatibility)
             // Otherwise check if should apply based on path patterns
             if (!middlewareConfig || shouldApplyMiddleware(fullRoutePath, middlewareConfig)) {
               routeInstance = routeInstance.use(mw);
-              console.log(`   ✅ Applied middleware: ${mw.name || 'unknown'}`);
+              console.log(`   ✅ Applied middleware: ${mwInfo}`);
             } else {
-              console.log(`   ⏭️  Skipped middleware: ${mw.name || 'unknown'} (path excluded: ${fullRoutePath})`);
+              console.log(`   ⏭️  Skipped middleware: ${mwInfo} (path excluded: ${fullRoutePath})`);
             }
           }
         }
       } else if (middleware) {
         // Single middleware
         const middlewareConfig = getMiddlewareConfig(middleware);
-        const middlewareName = (middleware as any).name || '';
+        
+        // Try to get middleware name from stored property first
+        let middlewareName = (middleware as any).middlewareName || (middleware as any).name || 'unknown';
+        
+        // If it's checkRole, try to get allowedRoles from stored property
+        const storedRoles = (middleware as any).allowedRoles;
+        if (storedRoles && Array.isArray(storedRoles) && storedRoles.length > 0) {
+          middlewareName = `checkRole([${storedRoles.join(', ')}])`;
+          console.log(`   🔍 Found single middleware: ${middlewareName} (stored roles: [${storedRoles.join(', ')}])`);
+        } else {
+          // Check if it's a checkRole middleware but roles are missing
+          if (middlewareName === 'unknown' && String(middleware).includes('allowedRoles')) {
+            console.log(`   ⚠️  [dynamicRouting] WARNING: checkRole middleware detected but allowedRoles not found in instance`);
+            console.log(`      Middleware type: ${typeof middleware}, has middlewareName: ${!!(middleware as any).middlewareName}, has allowedRoles: ${!!storedRoles}`);
+          }
+          console.log(`   🔍 Found single middleware: ${middlewareName}`);
+        }
         
         if (!middlewareConfig || shouldApplyMiddleware(fullRoutePath, middlewareConfig)) {
           routeInstance = routeInstance.use(middleware);
-          console.log(`   ✅ Applied middleware: ${middlewareName || 'unknown'}`);
+          console.log(`   ✅ Applied middleware: ${middlewareName}`);
         } else {
-          console.log(`   ⏭️  Skipped middleware: ${middlewareName || 'unknown'} (path excluded: ${fullRoutePath})`);
+          console.log(`   ⏭️  Skipped middleware: ${middlewareName} (path excluded: ${fullRoutePath})`);
         }
+      } else {
+        console.log(`   ℹ️  No middleware found in route file`);
       }
       
       // Register route with swagger config if available

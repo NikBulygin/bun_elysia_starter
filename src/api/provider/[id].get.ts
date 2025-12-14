@@ -1,10 +1,13 @@
 import { t } from 'elysia';
-import { getProviderById } from '../../utils/provider/getById';
+import { getProviderByIdWithStatus } from '../../utils/provider/getByIdWithStatus';
+
+// GET requests don't require role checking - only authentication
+export const middleware = [];
 
 export const swaggerConfig = {
   tags: ['Provider'],
   summary: 'Get provider by id',
-  description: 'Retrieves a provider by its id.',
+  description: 'Retrieves a provider by its id with connection status. Credentials are not returned for security reasons.',
   headers: {
     'X-Telegram-Init-Data': {
       description: 'Telegram Mini App initData for authentication',
@@ -28,7 +31,7 @@ export const swaggerConfig = {
             id: t.Number({ example: 1 }),
             type: t.String({ example: 'time' }),
             name: t.String({ example: 'Clockify' }),
-            credentials: t.Record(t.String(), t.Any()),
+            isWork: t.Boolean({ example: true, description: 'Whether the provider connection is working' }),
           }),
         },
       },
@@ -61,7 +64,7 @@ export default async function handler({
     };
   }
 
-  const provider = await getProviderById(id);
+  const provider = await getProviderByIdWithStatus(id);
 
   if (!provider) {
     return {

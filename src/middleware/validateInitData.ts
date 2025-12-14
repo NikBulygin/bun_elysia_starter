@@ -1,4 +1,4 @@
-import { Elysia } from 'elysia';
+import { Elysia, error } from 'elysia';
 import { validateInitData } from '../utils/telegram/validateInitData';
 import { getOrCreate } from '../utils/user/getOrCreate';
 import { getByTelegramUserId } from '../utils/user/getByTelegramUserId';
@@ -57,7 +57,7 @@ export const validateInitDataMiddleware = new Elysia()
 
     if (!initData) {
       console.log(`   ❌ [validateInitDataMiddleware] Decision: REJECTED - Missing X-Telegram-Init-Data header or initData in body`);
-      throw new Error('Missing X-Telegram-Init-Data header or initData in body');
+      throw error(403, { error: 'Missing X-Telegram-Init-Data header or initData in body' });
     }
 
     // Validate initData
@@ -65,12 +65,12 @@ export const validateInitDataMiddleware = new Elysia()
     
     if (!validationResult.isValid) {
       console.log(`   ❌ [validateInitDataMiddleware] Decision: REJECTED - Invalid initData signature`);
-      throw new Error('Invalid initData signature');
+      throw error(403, { error: 'Invalid initData signature' });
     }
 
     if (!validationResult.telegramUserId) {
       console.log(`   ❌ [validateInitDataMiddleware] Decision: REJECTED - Could not extract telegramUserId from initData`);
-      throw new Error('Could not extract telegramUserId from initData');
+      throw error(403, { error: 'Could not extract telegramUserId from initData' });
     }
 
     const telegramUserId = validationResult.telegramUserId;
@@ -87,7 +87,7 @@ export const validateInitDataMiddleware = new Elysia()
       if (username) {
         user = await getOrCreate(username);
       } else {
-        throw new Error('Could not create user: username not found in initData');
+        throw error(403, { error: 'Could not create user: username not found in initData' });
       }
     }
 

@@ -6,6 +6,12 @@ import './bot/index.js';
 
 // Create application
 const app = new Elysia()
+  .onRequest(({ request }) => {
+    const url = new URL(request.url);
+    const method = request.method;
+    const path = url.pathname;
+    console.log(`\n🌐 Incoming Request: ${method} ${path}`);
+  })
   .use(swagger({
     documentation: {
       info: {
@@ -25,11 +31,14 @@ const app = new Elysia()
       }
     }
   }))
-  .get('/', () => ({
-    message: 'Dev API Server',
-    endpoints: 'Check /swagger for API documentation',
-    structure: 'Routes are loaded dynamically from src/api/ directory'
-  }));
+  .get('/', () => {
+    console.log(`   ✅ Decision: PUBLIC route - no auth required`);
+    return {
+      message: 'Dev API Server',
+      endpoints: 'Check /swagger for API documentation',
+      structure: 'Routes are loaded dynamically from src/api/ directory'
+    };
+  });
 
 // Initialize database and load routes
 async function start() {

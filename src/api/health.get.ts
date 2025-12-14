@@ -14,7 +14,10 @@ interface HealthResponse {
 }
 
 // Handler function
-export default async (): Promise<HealthResponse> => {
+export default async (context: any): Promise<HealthResponse> => {
+  console.log(`   ✅ Handler called for PUBLIC route (health check) - no auth required`);
+  console.log(`   Context keys: ${Object.keys(context || {}).join(', ')}`);
+  
   const startTime = process.uptime();
   
   // Basic health checks

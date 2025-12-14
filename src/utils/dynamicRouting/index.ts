@@ -3,15 +3,13 @@ import { readdir, stat } from 'fs/promises';
 import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { validateInitDataMiddleware } from '../../middleware/validateInitData';
+import { validateInitDataMiddleware, validateInitDataMiddlewareConfig } from '../../middleware/validateInitData';
+import { shouldApplyMiddleware } from '../middleware/pathMatcher';
+import { getMiddlewareConfig } from '../middleware/getConfig';
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// Routes that don't require initData validation
-const publicRoutes = ['/health', '/'];
-const publicRoutePrefixes = ['/auth', '/bot'];
 
 // Function to dynamically load routes
 export async function loadRoutes(app: Elysia) {
@@ -68,27 +66,50 @@ async function processRouteFile(app: Elysia, filePath: string, routePath: string
     const middleware = module.middleware || [];
     
     if (handler && typeof handler === 'function') {
+      // Log route registration
+      console.log(`📋 Registering route: ${method.toUpperCase()} ${fullRoutePath}`);
+      console.log(`   File: ${fileName}, RouteName: ${routeName}, RoutePath: "${routePath}"`);
+      
+      // Apply initData validation middleware based on path patterns
+      const shouldApply = shouldApplyMiddleware(fullRoutePath, validateInitDataMiddlewareConfig);
+      
       // Create route instance with middleware
       let routeInstance = new Elysia();
       
-      // Check if route is public (doesn't require initData validation)
-      const isPublicRoute = publicRoutes.includes(fullRoutePath) || 
-                           publicRoutePrefixes.some(prefix => fullRoutePath.startsWith(prefix));
-      
-      // Apply initData validation middleware for non-public routes
-      if (!isPublicRoute) {
+      if (shouldApply) {
         routeInstance = routeInstance.use(validateInitDataMiddleware);
+        console.log(`   ✅ Applied validateInitDataMiddleware (matches pattern)`);
+      } else {
+        console.log(`   ⏭️  Skipped validateInitDataMiddleware (path excluded: ${fullRoutePath})`);
       }
       
-      // Apply route-specific middleware in order
+      // Apply route-specific middleware in order, checking path patterns
       if (Array.isArray(middleware)) {
         for (const mw of middleware) {
           if (mw) {
-            routeInstance = routeInstance.use(mw);
+            const middlewareConfig = getMiddlewareConfig(mw);
+            
+            // If no config found, apply middleware (backward compatibility)
+            // Otherwise check if should apply based on path patterns
+            if (!middlewareConfig || shouldApplyMiddleware(fullRoutePath, middlewareConfig)) {
+              routeInstance = routeInstance.use(mw);
+              console.log(`   ✅ Applied middleware: ${mw.name || 'unknown'}`);
+            } else {
+              console.log(`   ⏭️  Skipped middleware: ${mw.name || 'unknown'} (path excluded: ${fullRoutePath})`);
+            }
           }
         }
       } else if (middleware) {
-        routeInstance = routeInstance.use(middleware);
+        // Single middleware
+        const middlewareConfig = getMiddlewareConfig(middleware);
+        const middlewareName = (middleware as any).name || '';
+        
+        if (!middlewareConfig || shouldApplyMiddleware(fullRoutePath, middlewareConfig)) {
+          routeInstance = routeInstance.use(middleware);
+          console.log(`   ✅ Applied middleware: ${middlewareName || 'unknown'}`);
+        } else {
+          console.log(`   ⏭️  Skipped middleware: ${middlewareName || 'unknown'} (path excluded: ${fullRoutePath})`);
+        }
       }
       
       // Register route with swagger config if available

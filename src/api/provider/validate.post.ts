@@ -3,7 +3,7 @@ import { validateProviderById, validateAllProviders } from '../../utils/provider
 
 export const swaggerConfig = {
   tags: ['Provider'],
-  summary: 'Validate provider connection',
+  summary: 'Validate provider connection (time or tasks)',
   description: 'Validates provider connection by id or validates all providers. Returns validation results.',
   headers: {
     'X-Telegram-Init-Data': {

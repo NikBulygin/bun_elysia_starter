@@ -6,7 +6,7 @@ export const middleware = [];
 
 export const swaggerConfig = {
   tags: ['Provider'],
-  summary: 'Get all available provider schemas',
+  summary: 'Get all available provider schemas (time and tasks)',
   description: 'Returns a list of all available providers (Clockify, Jira) with their credentials schemas. This endpoint shows what providers can be created, regardless of whether they exist in the database.',
   headers: {
     'X-Telegram-Init-Data': {

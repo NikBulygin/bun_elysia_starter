@@ -1,8 +1,11 @@
 import { TimeProvider } from './TimeProvider';
+import type { Workspace } from './types';
 
 export interface ClockifyCredentials {
   token: string;
 }
+
+const CLOCKIFY_API_BASE = 'https://api.clockify.me/api/v1';
 
 /**
  * Clockify provider implementation
@@ -16,6 +19,33 @@ export class ClockifyProvider extends TimeProvider {
       throw new Error('Invalid Clockify credentials: token is required');
     }
     this.token = credentials.token;
+  }
+
+  async getWorkspaces(filters?: { roles?: string[] }): Promise<Workspace[]> {
+    const url = new URL(`${CLOCKIFY_API_BASE}/workspaces`);
+    
+    // Add roles query parameters if provided
+    if (filters?.roles && filters.roles.length > 0) {
+      filters.roles.forEach(role => {
+        url.searchParams.append('roles', role);
+      });
+    }
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'X-Api-Key': this.token,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error');
+      throw new Error(`Clockify API error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const workspaces: Workspace[] = await response.json();
+    return workspaces;
   }
 
   async validateConnection(): Promise<boolean> {

@@ -6,7 +6,7 @@ export const middleware = [];
 
 export const swaggerConfig = {
   tags: ['Provider'],
-  summary: 'Delete provider',
+  summary: 'Delete provider (time or tasks)',
   description: 'Deletes a provider by id. Only admin can delete providers.',
   headers: {
     'X-Telegram-Init-Data': {

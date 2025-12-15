@@ -1,13 +1,13 @@
 import { t } from 'elysia';
 import { getCredentialsSchema } from '../../../../utils/provider/getCredentialsSchema';
-import type { ProviderType, ProviderName } from '../../../../db/schema/providers';
+import type { ProviderType, ProviderName } from '../../../../providers/validators';
 
 // GET requests don't require role checking - only authentication
 export const middleware = [];
 
 export const swaggerConfig = {
   tags: ['Provider'],
-  summary: 'Get credentials schema for provider',
+  summary: 'Get credentials schema for provider (time or tasks)',
   description: 'Returns the structure of credentials required for a specific provider type and name.',
   headers: {
     'X-Telegram-Init-Data': {

@@ -6,7 +6,7 @@ export const middleware = [];
 
 export const swaggerConfig = {
   tags: ['Provider'],
-  summary: 'Create provider',
+  summary: 'Create provider (time or tasks)',
   description: 'Creates a new provider with credentials validation. Only admin can create providers.',
   headers: {
     'X-Telegram-Init-Data': {

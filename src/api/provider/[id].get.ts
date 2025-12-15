@@ -6,7 +6,7 @@ export const middleware = [];
 
 export const swaggerConfig = {
   tags: ['Provider'],
-  summary: 'Get provider by id',
+  summary: 'Get provider by id (time or tasks)',
   description: 'Retrieves a provider by its id with connection status. Credentials are not returned for security reasons.',
   headers: {
     'X-Telegram-Init-Data': {

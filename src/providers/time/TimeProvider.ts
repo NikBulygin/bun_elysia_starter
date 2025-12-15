@@ -1,9 +1,15 @@
 import { Provider } from '../base/Provider';
+import type { Workspace } from './types';
 
 /**
  * Abstract class for Time providers (e.g., Clockify)
  */
 export abstract class TimeProvider extends Provider {
+  /**
+   * Get all workspaces, optionally filtered by roles
+   */
+  abstract getWorkspaces(filters?: { roles?: string[] }): Promise<Workspace[]>;
+
   /**
    * Get statistics for a period, optionally filtered by project
    */
